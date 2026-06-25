@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AV Scheduler Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f1f5f9; }
+        .day-btn.active { border-right: 4px solid #4f46e5; background: #eef2ff !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-indigo-900 text-white p-4 shadow-lg flex justify-between items-center px-8">
+        <h1 class="text-xl font-semibold"><i class="fa-solid fa-calendar-check mr-2"></i> AV Scheduler Pro</h1>
+        <button onclick="openModal()" class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm transition">
+            <i class="fa-solid fa-plus mr-2"></i>เพิ่มงานใหม่
+        </button>
+    </nav>
+
+    <div class="max-w-6xl mx-auto w-full px-6 pt-6">
+        <div class="bg-indigo-100 border border-indigo-200 text-indigo-900 px-6 py-4 rounded-2xl flex items-center gap-4">
+            <i class="fa-solid fa-calendar-days text-3xl text-indigo-600"></i>
+            <div>
+                <p class="text-sm font-medium text-indigo-700 uppercase">วันที่ปัจจุบัน</p>
+                <h2 id="todayDateDisplay" class="text-2xl font-bold">-</h2>
+                <p id="weekRangeDisplay" class="text-sm text-indigo-800 font-medium mt-1">-</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div id="sideMenu" class="space-y-2">
+            <button onclick="switchDay('Monday', this)" class="day-btn w-full p-4 rounded-xl bg-white shadow-sm hover:shadow transition flex items-center gap-3 active">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div> วันจันทร์
+            </button>
+            <button onclick="switchDay('Tuesday', this)" class="day-btn w-full p-4 rounded-xl bg-white shadow-sm hover:shadow transition flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-pink-500"></div> วันอังคาร
+            </button>
+            <button onclick="switchDay('Wednesday', this)" class="day-btn w-full p-4 rounded-xl bg-white shadow-sm hover:shadow transition flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-green-500"></div> วันพุธ
+            </button>
+            <button onclick="switchDay('Thursday', this)" class="day-btn w-full p-4 rounded-xl bg-white shadow-sm hover:shadow transition flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-orange-500"></div> วันพฤหัสบดี
+            </button>
+            <button onclick="switchDay('Friday', this)" class="day-btn w-full p-4 rounded-xl bg-white shadow-sm hover:shadow transition flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-purple-500"></div> วันศุกร์
+            </button>
+        </div>
+
+        <div class="md:col-span-3 bg-white rounded-2xl p-6 shadow-sm min-h-[400px]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="currentDayTitle" class="text-2xl font-bold text-slate-700">ตารางงานวันจันทร์</h2>
+                <button onclick="clearDayTasks()" class="text-xs text-red-500 hover:text-red-700 border border-red-200 px-3 py-1 rounded-full">ลบงานทั้งหมดของวันนี้</button>
+            </div>
+            <div id="tasksContainer" class="grid grid-cols-1 gap-4"></div>
+        </div>
+    </main>
+
+    <div id="taskModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+            <h3 id="modalTitle" class="text-xl font-bold mb-4">เพิ่มงานใหม่</h3>
+            <form id="taskForm" onsubmit="saveTask(event)" class="space-y-4">
+                <input type="hidden" id="editId">
+                <input type="text" id="taskName" required placeholder="ชื่องาน" class="w-full p-2 border rounded-lg">
+                <select id="taskDay" required class="w-full p-2 border rounded-lg">
+                    <option value="Monday">วันจันทร์</option><option value="Tuesday">วันอังคาร</option>
+                    <option value="Wednesday">วันพุธ</option><option value="Thursday">วันพฤหัสบดี</option><option value="Friday">วันศุกร์</option>
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="time" id="taskStartTime" required class="w-full p-2 border rounded-lg">
+                    <input type="time" id="taskEndTime" required class="w-full p-2 border rounded-lg">
+                </div>
+                <select id="taskLocation" required class="w-full p-2 border rounded-lg">
+                    <option value="">เลือกสถานที่</option>
+                    <option value="Amphitheatre">Amphitheatre</option>
+                    <option value="Grand Theatre">Grand Theatre</option>
+                    <option value="PYP Function room">PYP Function room</option>
+                    <option value="MYP Function Room">MYP Function Room</option>
+                    <option value="P501">P501</option>
+                    <option value="P303">P303</option>
+                    <option value="P308">P308</option>
+                    <option value="P301">P301</option>
+                    <option value="MYP Gym">MYP Gym</option>
+                    <option value="SC Gym">SC Gym</option>
+                    <option value="PY Gym">PY Gym</option>
+                    <option value="Soccer Field">Soccer Field</option>
+                    <option value="School Lobby">School Lobby</option>
+                    <option value="Extra Venue">Extra Venue</option>
+                </select>
+                <select id="taskAssignee" required class="w-full p-2 border rounded-lg">
+                    <option value="">เลือกผู้รับผิดชอบ</option>
+                    <option value="Game">Game</option>
+                    <option value="Wat">Wat</option>
+                    <option value="Max">Max</option>
+                    <option value="Ohm">Ohm</option>
+                    <option value="Korn">Korn</option>
+                </select>
+                <div class="flex gap-2 justify-end mt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-slate-500">ยกเลิก</button>
+                    <button type="submit" id="saveBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyJikQio8vML4OvkchM16cqNz0TtHszQxXfwUixGcFfEHq76iELOpawgnDMr0kj1OXk/exec";
+        let state = { tasks: [], currentDay: 'Monday' };
+
+        function updateDateHeader() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('todayDateDisplay').innerText = dateStr;
+
+            // คำนวณหาจันทร์-ศุกร์ ของสัปดาห์นี้
+            const dayOfWeek = now.getDay(); // 0 (อาทิตย์) - 6 (เสาร์)
+            const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + diffToMon);
+            
+            const friday = new Date(monday);
+            friday.setDate(monday.getDate() + 4);
+
+            const monStr = monday.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+            const friStr = friday.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+            
+            document.getElementById('weekRangeDisplay').innerText = `สัปดาห์นี้: ${monStr} - ${friStr}`;
+        }
+
+        function formatTimeDisplay(val) {
+            if (!val) return "--:--";
+            if (typeof val === 'string' && (val.includes("T") || val.includes("1899"))) {
+                const d = new Date(val);
+                const h = String(d.getHours()).padStart(2, '0');
+                const m = String(d.getMinutes()).padStart(2, '0');
+                return `${h}:${m}`;
+            }
+            return val;
+        }
+
+        async function loadData() {
+            updateDateHeader();
+            try {
+                const res = await fetch(`${WEB_APP_URL}?action=getTasks`);
+                state.tasks = await res.json();
+                render();
+            } catch (err) { console.error("Error:", err); }
+        }
+
+        function render() {
+            const container = document.getElementById('tasksContainer');
+            container.innerHTML = "";
+            state.tasks.filter(t => t.day === state.currentDay).sort((a,b) => a.startTime.localeCompare(b.startTime)).forEach(task => {
+                const card = document.createElement('div');
+                card.className = "border rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-indigo-300";
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <h4 class="font-bold text-lg text-slate-800">${task.name}</h4>
+                        <div class="text-sm text-slate-600 mt-1">
+                            <span class="font-medium text-indigo-700">${formatTimeDisplay(task.startTime)} - ${formatTimeDisplay(task.endTime)}</span> 
+                            | <span>${task.location}</span>
+                            | <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-user mr-1"></i>${task.assignee}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editTask('${task.id}')" class="text-blue-500 hover:text-blue-700 p-2"><i class="fa-solid fa-pencil"></i></button>
+                        <button onclick="deleteTask('${task.id}')" class="text-red-500 hover:text-red-700 p-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function editTask(id) {
+            const task = state.tasks.find(t => t.id === id);
+            if (!task) return;
+            document.getElementById('editId').value = task.id;
+            document.getElementById('taskName').value = task.name;
+            document.getElementById('taskDay').value = task.day;
+            document.getElementById('taskStartTime').value = task.startTime;
+            document.getElementById('taskEndTime').value = task.endTime;
+            document.getElementById('taskLocation').value = task.location;
+            document.getElementById('taskAssignee').value = task.assignee;
+            document.getElementById('modalTitle').innerText = "แก้ไขงาน";
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        async function saveTask(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const task = {
+                id: id || 'task-' + Date.now(),
+                name: document.getElementById('taskName').value,
+                day: document.getElementById('taskDay').value,
+                startTime: document.getElementById('taskStartTime').value,
+                endTime: document.getElementById('taskEndTime').value,
+                location: document.getElementById('taskLocation').value,
+                assignee: document.getElementById('taskAssignee').value,
+                status: 'Pending'
+            };
+            const action = id ? 'edit' : 'add';
+            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action, task }) });
+            closeModal();
+            loadData();
+        }
+
+        function switchDay(day, el) {
+            state.currentDay = day;
+            document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+            if(el) el.classList.add('active');
+            const map = {'Monday': 'จันทร์', 'Tuesday': 'อังคาร', 'Wednesday': 'พุธ', 'Thursday': 'พฤหัสบดี', 'Friday': 'ศุกร์'};
+            document.getElementById('currentDayTitle').innerText = "ตารางงานวัน" + map[day];
+            render();
+        }
+
+        async function deleteTask(id) {
+            if(!confirm("ลบงานนี้ใช่ไหม?")) return;
+            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', task: { id } }) });
+            loadData();
+        }
+
+        async function clearDayTasks() {
+            if(!confirm("ยืนยันลบงานทั้งหมดของวันนี้?")) return;
+            const tasksToDelete = state.tasks.filter(t => t.day === state.currentDay);
+            for (const t of tasksToDelete) {
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', task: { id: t.id } }) });
+            }
+            loadData();
+        }
+
+        function openModal() { document.getElementById('modalTitle').innerText = "เพิ่มงานใหม่"; document.getElementById('taskForm').reset(); document.getElementById('editId').value = ""; document.getElementById('taskModal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('taskModal').classList.add('hidden'); }
+        window.onload = loadData;
+    </script>
+</body>
+</html>
