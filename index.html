@@ -16,7 +16,7 @@
 
     <!-- Navbar -->
     <nav class="bg-indigo-900 text-white p-4 shadow-lg flex justify-between items-center px-8">
-        <h1 class="text-xl font-semibold"><i class="fa-solid fa-calendar-check mr-2"></i> Audio Visual Weekly Task</h1>
+        <h1 class="text-xl font-semibold"><i class="fa-solid fa-calendar-check mr-2"></i> AV Scheduler Pro</h1>
         <button onclick="openAddModal()" class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm transition font-medium">
             <i class="fa-solid fa-plus mr-2"></i>เพิ่มงานใหม่
         </button>
@@ -59,7 +59,12 @@
 
         <!-- Task List Area -->
         <div class="md:col-span-3 bg-white rounded-2xl p-6 shadow-sm min-h-[500px]">
-            <h2 id="currentDayTitle" class="text-2xl font-bold mb-6 text-slate-700">เลือกวัน...</h2>
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+                <h2 id="currentDayTitle" class="text-2xl font-bold text-slate-700">เลือกวัน...</h2>
+                <button onclick="clearDayTasks()" class="text-xs text-red-500 hover:text-red-700 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5 self-start sm:self-auto">
+                    <i class="fa-solid fa-trash-can"></i> ลบงานทั้งหมดของวันนี้
+                </button>
+            </div>
             <div id="tasksContainer" class="grid grid-cols-1 gap-4">
                 <div class="text-center py-10 text-slate-400">กำลังโหลดข้อมูล...</div>
             </div>
@@ -300,7 +305,7 @@
                 startTime: document.getElementById('taskStartTime').value,
                 endTime: document.getElementById('taskEndTime').value,
                 location: document.getElementById('taskLocation').value,
-                // แก้ไขจุดสำคัญ: รวมชื่อเป็นข้อความคั่นด้วยจุลภาค ", " ส่งไปบันทึกบน Google Sheets ให้ถูกต้อง 100%
+                // รวมชื่อเป็นข้อความคั่นด้วยจุลภาค ", " ส่งไปบันทึกบน Google Sheets ให้ถูกต้อง 100%
                 assignee: selectedAssignees.join(', '), 
                 status: 'Pending'
             };
@@ -323,6 +328,37 @@
                 body: JSON.stringify({ action: 'delete', task: { id } }) 
             });
             loadData();
+        }
+
+        // ฟังก์ชันลบงานทั้งหมดสำหรับวันที่กำลังเลือกอยู่
+        async function clearDayTasks() {
+            const filtered = state.tasks.filter(t => t.day === state.currentDay);
+            if (filtered.length === 0) {
+                alert("ไม่มีงานในตารางสำหรับวันนี้ที่จะทำการลบ");
+                return;
+            }
+
+            const dayNames = {'Monday': 'วันจันทร์', 'Tuesday': 'วันอังคาร', 'Wednesday': 'วันพุธ', 'Thursday': 'วันพฤหัสบดี', 'Friday': 'วันศุกร์'};
+            const displayDayName = dayNames[state.currentDay] || state.currentDay;
+
+            if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบงานทั้งหมดของ ${displayDayName} (${filtered.length} งาน)? ข้อมูลทั้งหมดจะถูกลบออกจากฐานข้อมูลอย่างถาวร!`)) {
+                return;
+            }
+
+            // แสดงหน้าโหลดหมุนๆ หรือสถานะตามต้องการ (ยิงส่ง Delete ทีละ ID ไปยัง backend)
+            try {
+                const deletePromises = filtered.map(task => 
+                    fetch(WEB_APP_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ action: 'delete', task: { id: task.id } }) 
+                    })
+                );
+                await Promise.all(deletePromises);
+                loadData();
+            } catch (err) {
+                console.error("Error clearing tasks for current day:", err);
+                alert("เกิดข้อผิดพลาดในการลบข้อมูลทั้งหมด โปรดลองใหม่อีกครั้ง");
+            }
         }
 
         window.onload = () => {
